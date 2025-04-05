@@ -1,6 +1,6 @@
 from config.importer import *
-from utils.config_help import *
-from utils.data_help import *
+from helper.config_help import *
+from helper.data_help import *
 
 class MuscleSynergyDataLoader:
     """
@@ -19,7 +19,7 @@ class MuscleSynergyDataLoader:
         self.pose_name = pose_name  
       
 
-    def single_pose(self): 
+    def single_pose_dict(self): 
         """
         Load and preprocess EMG data for a single pose.
 
@@ -43,7 +43,7 @@ class MuscleSynergyDataLoader:
 
     
 
-    def combined_poses(self):
+    def combined_poses_dict(self):
         """
         Load and combine EMG data from multiple poses into a single dictionary.
         

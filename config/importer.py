@@ -7,3 +7,6 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 from sklearn.decomposition import NMF
+from sklearn.model_selection import KFold
+
+

@@ -2,7 +2,7 @@ from config.importer import *
 from helper.config_help import *
 from helper.data_help import *
 
-class MuscleSynergyDataLoader:
+class DataLoader:
     """
     A class to handle loading of EMG data and configuration for muscle synergy analysis.
     """

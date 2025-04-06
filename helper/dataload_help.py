@@ -30,6 +30,11 @@ def load_emg_data(bag_path, topic_name):
     # Ensure emg_data is shaped correctly (samples × muscles)
     if emg_data.shape[0] < emg_data.shape[1]:  # If (n_muscles, n_samples), transpose it
         emg_data = emg_data.T  # Now it’s (n_samples, n_muscles)
+    
+    """if emg_data.all() != None and timestamps.all() != None:
+        print(f"Loaded {emg_data.shape[0]} samples and {emg_data.shape[1]} muscles from {bag_path}.")
+    else:
+        print("Failed to load data for the single selected gesture.")"""
     return emg_data, timestamps
 
 
@@ -72,6 +77,11 @@ def load_pose_repetitions(pose_paths_dict, topic_name, pose_name):
 def load_combined_emg_data(selected_paths, topic_name):
     """
     Load and combine EMG data from multiple ROS bag files.
+
+    Works like the single dataset loader but is able to load n paths data at once comcatenated.
+
+    Usage:
+    emg_data, timestamps = load_combined_emg_data('list_with_bag_data_paths', 'emg_topic')
     """
     # Initialize empty lists for EMG data and timestamps
     emg_data_combined = []

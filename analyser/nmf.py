@@ -7,7 +7,7 @@ class NMF:
     A class to perform Non-negative Matrix Factorization (NMF) tasks on EMG data.
     """
     
-    def __init__(self, emg_data, min_synergies, max_synergies, init, max_iter, l1_ratio, alpha_W, random_state):
+    def __init__(self, emg_data, min_synergies=None, max_synergies=None, init=None, max_iter=None, l1_ratio=None, alpha_W=None, random_state=None):
         """
         Initialize the NMF class with parameters and data.
         

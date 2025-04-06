@@ -17,31 +17,32 @@ class DataLoader:
         """
         self.config_path = config_path
         self.pose_name = pose_name  
-      
+        self._config = None # Cache for loaded configuration
+
+
+    def _load_config(self):
+        """Helper method to load and cache configuration"""
+        if self._config is None:
+            with open(self.config_path, "r") as f:
+                self._config = yaml.safe_load(f)
+                if not self._config:
+                    raise ValueError("YAML file is empty or not properly formatted.")
+        return self._config
+    
+
 
     def single_pose_dict(self): 
         """
         Load and preprocess EMG data for a single pose.
 
         Returns:  
-            dict: Dictionary containing the loaded EMG data.
+            dict: Dictionary containing the loaded EMG data for all repetitions.
         """
-        # Load YAML file
-        with open(self.config_path, "r") as f:  # Fixed: Use self.config_path instead of global config_path
-            config = yaml.safe_load(f)
-            if not config:
-                raise ValueError("YAML file is empty or not properly formatted.")
-        
-        # Get file paths for the specified pose dataset
+        config = self._load_config()
         pose_paths = get_pose_paths(config, self.pose_name)
-
-        # Load and concatenate EMG data from all repetitions
-        dict_data = load_pose_repetitions(pose_paths, config["emg_topic"], self.pose_name)
-        
-        return dict_data
+        return load_pose_repetitions(pose_paths, config["emg_topic"], self.pose_name)
     
 
-    
 
     def combined_poses_dict(self):
         """
@@ -50,24 +51,58 @@ class DataLoader:
         Returns:
             dict: Keys are repetition numbers, values are concatenated data from all poses.
         """
-        # Load YAML file
-        with open(self.config_path, "r") as f:  # Fixed: Use self.config_path instead of global config_path
-            config = yaml.safe_load(f)
-            if not config:
-                raise ValueError("YAML file is empty or not properly formatted.")
-        
+        config = self._load_config()
         pinch_paths = get_pose_paths(config, "pinch")
         ulnar_paths = get_pose_paths(config, "ulnar")
         power_paths = get_pose_paths(config, "power")
 
         poses_paths = [pinch_paths, ulnar_paths, power_paths]
-        poses_names = config["pinch_ulnar_power"]
+        poses_names = ["pinch", "ulnar", "power"]  # Fixed: Use literal list instead of config key
+
+        return load_combined_pose_repetitions(poses_paths, config["emg_topic"], poses_names) 
 
 
-        # Load and concatenate EMG data from all repetitions
-        combined_data = load_combined_pose_repetitions(poses_paths, config["emg_topic"], poses_names)
+
+    def single_dataset(self, rep_id="0"):
+        """
+        Load a single dataset (one repetition) for the configured pose.
         
-        return combined_data  
+        Args:
+            rep_id (str): The repetition ID to load ("0", "1", or "2")
+            
+        Returns:
+            tuple: (emg_data, timestamps) for the specified repetition
+        """
+        config = self._load_config()
+        pose_paths = get_pose_paths(config, self.pose_name)
+        
+        if rep_id not in pose_paths:
+            raise ValueError(f"Repetition {rep_id} not found for pose {self.pose_name}")
+            
+        bag_path = pose_paths[rep_id]
+        emg_data, timestamps = load_emg_data(bag_path, config["emg_topic"])
+        
+        print(f"\nLoaded single dataset for {self.pose_name} Rep {rep_id}:\n")
+        print(f"  Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}")
+        
+        return emg_data, timestamps
+    
 
+
+    def combined_dataset(self, pinch_rep="0", ulnar_rep="0", power_rep="0"):
+        """Combine specific repetitions from different poses"""
+        config = self._load_config()
+        paths = [
+            get_pose_paths(config, "pinch")[pinch_rep],
+            get_pose_paths(config, "ulnar")[ulnar_rep],
+            get_pose_paths(config, "power")[power_rep]
+        ]
+
+        emg_data_combined, timestamps_combined = load_combined_emg_data(paths, config["emg_topic"])
+        
+        print(f"\nLoaded combined dataset for gestures Rep {pinch_rep}{ulnar_rep}{power_rep}:\n")
+        print(f"  Samples: {emg_data_combined.shape[0]}, Muscles: {emg_data_combined.shape[1]}")
+
+        return emg_data_combined, timestamps_combined
 
         

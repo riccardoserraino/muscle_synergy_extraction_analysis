@@ -1,6 +1,6 @@
 from config.importer import *
 from helper.config_help import *
-from helper.data_help import *
+from helper.dataload_help import *
 
 class DataLoader:
     """
@@ -83,7 +83,7 @@ class DataLoader:
         emg_data, timestamps = load_emg_data(bag_path, config["emg_topic"])
         
         print(f"\nLoaded single dataset for {self.pose_name} Rep {rep_id}:\n")
-        print(f"  Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}")
+        print(f"  Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}\n\n")
         
         return emg_data, timestamps
     
@@ -101,7 +101,7 @@ class DataLoader:
         emg_data_combined, timestamps_combined = load_combined_emg_data(paths, config["emg_topic"])
         
         print(f"\nLoaded combined dataset for gestures Rep {pinch_rep}{ulnar_rep}{power_rep}:\n")
-        print(f"  Samples: {emg_data_combined.shape[0]}, Muscles: {emg_data_combined.shape[1]}")
+        print(f"  Samples: {emg_data_combined.shape[0]}, Muscles: {emg_data_combined.shape[1]}\n\n")
 
         return emg_data_combined, timestamps_combined
 

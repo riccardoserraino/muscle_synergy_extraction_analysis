@@ -135,7 +135,7 @@ def load_combined_pose_repetitions(pose_paths_dicts, topic_name, pose_names):
     print(f"\nCombining data for poses: {', '.join(pose_names)}")
     print(f"Found {len(common_reps)} common repositories\n")
     
-    for rep_id in common_reps:
+    for rep_id in sorted(common_reps, key=int):
         try:
             emg_parts = []
             ts_parts = []

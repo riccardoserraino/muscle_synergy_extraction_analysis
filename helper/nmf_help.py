@@ -52,7 +52,9 @@ def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_
     return W, H
 
 
+
 #------------------------------------------------------------------------
+
 
 
 def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, random_state):
@@ -67,78 +69,220 @@ def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, rand
     return VAF_values
 
 
+
 #------------------------------------------------------------------------
 
 
 
-def cross_validate_synergies(datasets, max_synergies=8, n_folds=3, min_synergies=1, 
-                           init='nndsvd', max_iter=500, l1_ratio=0.7, alpha_W=0.001, 
-                           random_state=None):
+def scale_synergy_signal(W, emg_data):
     """
-    Perform cross-validation to determine the optimal number of synergies across multiple datasets.
+    Normalizes synergy activations to match original EMG amplitude range.
     
-    Parameters:
-    - datasets: List of 3 EMG datasets (numpy arrays) to analyze
-    - max_synergies: Maximum number of synergies to test
-    - n_folds: Number of folds for cross-validation
-    - min_synergies: Minimum number of synergies to consider
-    - Other parameters: NMF algorithm parameters for sparse NMF
+    Implementation:
+    - Linear scaling preserving activation dynamics
+    - Maintains non-negativity constraint
+    - Handles both single and multi-channel EMG
+    
+    Args:
+        W: Activation matrix (n_samples x n_synergies)
+        emg_data: Original EMG (n_samples x n_muscles)
+    """
+    emg_min = np.min(emg_data)
+    emg_max = np.max(emg_data)
+    W_min = np.min(W)
+    W_max = np.max(W)
+    W_scaled = ((W - W_min) / (W_max - W_min)) * (emg_max - emg_min) + emg_min
+    W_scaled = np.maximum(W_scaled, 0)  # Ensures W_scaled is non-negative
+    return W_scaled
+
+
+
+#------------------------------------------------------------------------
+
+
+
+def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_synergies):
+    """
+    Determine optimal synergy count via cross-validation.
+    
+    Implementation:
+    - 3-fold cross-validation (leave-one-repetition-out)
+    - Uses variance explained as primary metric
+    - Applies light sparsity only to activation patterns
+    - Robust error handling
     
     Returns:
-    - optimal_synergies: List of optimal synergy counts for each dataset
-    - all_vaf_curves: VAF curves for each dataset and fold
+    (optimal_synergies, variance_results)
     """
+    # Extract the repetitions from the dictionary
+    rep0 = reps_dict['0']
+    rep1 = reps_dict['1'] 
+    rep2 = reps_dict['2']
     
-    # Validate inputs
-    if len(datasets) != 3:
-        raise ValueError("Exactly 3 datasets are required")
-    if any(d.shape[1] < max_synergies for d in datasets):
-        raise ValueError("Number of muscles must be >= max_synergies")
+    synergy_range = range(1, max_synergies + 1)
+    results = []
     
-    optimal_synergies = []
-    all_vaf_curves = {i: [] for i in range(3)}  # Store VAF curves for each dataset
-    
-    for i, emg_data in enumerate(datasets):
-        print(f"\nProcessing dataset {i+1}")
-        
-        # Prepare for cross-validation
-        kf = KFold(n_splits=n_folds, shuffle=True, random_state=random_state)
-        fold_vaf_curves = []
-        
-        for fold, (train_idx, test_idx) in enumerate(kf.split(emg_data)):
-            print(f"\nFold {fold+1}/{n_folds}")
-            train_data = emg_data[train_idx]
-            test_data = emg_data[test_idx]
-            
-            # Compute VAF curve for this fold
-            vaf_curve = []
-            
-            for n in range(1, max_synergies + 1):
-                # Train on training set
-                W_train, H_train = apply_nmf(
-                    train_data, n, init=init, max_iter=max_iter, 
-                    l1_ratio=l1_ratio, alpha_W=alpha_W, random_state=random_state
-                )
+    print("\nRunning cross-validation for synergy selection...")
+    for n in synergy_range:
+        fold_metrics  = []
+        # Create all possible train/test splits
+        for (X_train, X_test) in [
+            (np.vstack([rep0, rep1]), rep2),
+            (np.vstack([rep0, rep2]), rep1),
+            (np.vstack([rep1, rep2]), rep0)
+        ]:
+            try:
+                model = NMF(n_components=n, 
+                            alpha_W=alpha, 
+                            alpha_H=0, 
+                            l1_ratio=l1_ratio, 
+                            init='nndsvd', 
+                            max_iter=500, 
+                            random_state=42)
+                W_train = model.fit_transform(X_train)
                 
-                # Reconstruct test data
-                W_test = np.linalg.lstsq(H_train.T, test_data.T, rcond=None)[0].T
-                reconstructed = W_test @ H_train
-                
-                # Compute VAF on test set
-                vaf = 1 - np.sum((test_data - reconstructed) ** 2) / np.sum(test_data ** 2)
-                vaf_curve.append(vaf)
-                print(f"Dataset {i+1}, Fold {fold+1}: VAF for {n} synergies: {vaf:.4f}")
-            
-            fold_vaf_curves.append(vaf_curve)
+                # Calculate metrics
+                X_recon = model.transform(X_test) @ model.components_
+                recon_error = np.linalg.norm(X_test - X_recon, 'fro')
+                var_explained = 1 - (recon_error**2 / np.sum(X_test**2))
+
+                fold_metrics.append(var_explained)
+
+            except Exception as e:
+                print(f"Warning: {n} synergies failed - {str(e)}")
+                fold_metrics.append(0)  # Append 0 variance if failed
+                continue
         
-        # Average VAF curves across folds
-        avg_vaf_curve = np.mean(fold_vaf_curves, axis=0)
-        all_vaf_curves[i] = avg_vaf_curve
-        
-        # Find optimal number of synergies
-        optimal_idx = find_elbow(avg_vaf_curve, min_synergies)
-        optimal_synergies.append(optimal_idx + 1)  # Convert from index to count
-        
-        print(f"\nDataset {i+1} optimal synergies: {optimal_synergies[-1]}")
+        if fold_metrics:
+            avg_variance = np.mean(fold_metrics)
+            results.append((avg_variance))
+            print(f"  - Synergies: {n}, Variance Explained: {avg_variance:.2%}")
+
+    # Find elbow point in variance explained curve
+    if len(results) > 0:
+        optimal_idx = find_elbow(results, min_synergies)
+        optimal_synergies = synergy_range[optimal_idx]
+    else:
+        optimal_synergies = min_synergies
     
-    return optimal_synergies, all_vaf_curves
+    print(f"\nOptimal number of synergies: {optimal_synergies}")
+
+    return optimal_synergies, results
+
+
+
+#-----------------------------------------------------------
+
+
+
+def sparsity_evaluation(reps_dict, n_synergies, alpha_values, l1_ratio):
+    """
+    Evaluate sparsity parameters for given synergy count.
+    
+    Implementation:
+    - Tests range of alpha values
+    - Tracks multiple quality metrics
+    - Uses conservative sparsity on components
+    - Detailed progress reporting
+    
+    Returns:
+    List of dictionaries with evaluation metrics
+    """
+
+    X = np.vstack([reps_dict['0'], reps_dict['1'], reps_dict['2']])
+    results = []
+
+    print("\nEvaluating sparsity parameters...")
+    for alpha in alpha_values:
+        try:
+            model = NMF(n_components=n_synergies, 
+                        alpha_W=alpha, 
+                        alpha_H=0, 
+                        l1_ratio=l1_ratio,
+                        init='nndsvd', 
+                        max_iter=500, 
+                        random_state=42)
+            W = model.fit_transform(X)
+            U = model.components_
+            
+            # Calculate multiple metrics
+            recon_error = np.linalg.norm(X - W @ U, 'fro')
+            var_explained = 1 - (recon_error**2 / np.sum(X**2))
+            sparsity = (np.count_nonzero(U == 0) / U.size) * 100
+            condition_number = np.linalg.cond(U)
+            
+            results.append({
+                'alpha': alpha,
+                'error': recon_error,
+                'variance': var_explained,
+                'sparsity': sparsity,
+                'condition': condition_number
+            })
+
+            print(f"  - α={alpha:.3f}: Var={var_explained:.2%}, " 
+                  f"Sparsity={sparsity:.1f}%, Cond={condition_number:.1f}")
+        
+        except Exception as e:
+            print(f"  - α={alpha:.3f} failed: {str(e)}")
+            continue
+
+    return results
+
+
+
+#-----------------------------------------------------------
+
+
+
+def best_alpha(sparsity_results, var_weight, sparsity_weight, cond_weight):
+    """
+    Select best alpha based on multiple criteria.
+    """
+    if not sparsity_results:
+        raise ValueError("No valid sparsity results")
+    
+    # Normalize metrics
+    vars = np.array([r['variance'] for r in sparsity_results])
+    spars = np.array([r['sparsity'] for r in sparsity_results])
+    conds = np.array([r['condition'] for r in sparsity_results])
+    
+    # Higher variance and sparsity are better, lower condition number is better
+    norm_vars = (vars - np.min(vars)) / (np.max(vars) - np.min(vars))
+    norm_spars = (spars - np.min(spars)) / (np.max(spars) - np.min(spars))
+    norm_conds = 1 - ((conds - np.min(conds)) / (np.max(conds) - np.min(conds)))
+    
+    # Combined score
+    scores = (var_weight * norm_vars + 
+              sparsity_weight * norm_spars + 
+              cond_weight * norm_conds)
+    
+    best_idx = np.argmax(scores)
+    return sparsity_results[best_idx]
+
+
+
+#------------------------------------------------------------------------
+
+
+
+def explain_frobenius_error(original, reconstructed):
+    """
+    Generates human-readable interpretation of reconstruction error metrics
+    Returns dictionary with:
+    - total_error: Original Frobenius norm
+    - normalized_error: Error relative to signal magnitude
+    - per_sample_error: Average error per sample per muscle
+    - per_muscle_error: Average error per muscle channel
+    """
+    error = np.linalg.norm(original - reconstructed)
+    n_samples, n_muscles = original.shape
+    
+    return {
+        'total_frobenius_error': error,
+        'normalized_error': error / np.linalg.norm(original),
+        'per_sample_error': error / (n_samples * n_muscles),
+        'per_muscle_error': [np.mean(np.abs(original[:,i] - reconstructed[:,i])) for i in range(n_muscles)]
+    }
+
+
+

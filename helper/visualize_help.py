@@ -1,7 +1,29 @@
 from config.importer import *
 
+def scale_synergy_signal(W, emg_data):
+    """
+    Normalizes synergy activations to match original EMG amplitude range.
+    
+    Implementation:
+    - Linear scaling preserving activation dynamics
+    - Maintains non-negativity constraint
+    - Handles both single and multi-channel EMG
+    
+    Args:
+        W: Activation matrix (n_samples x n_synergies)
+        emg_data: Original EMG (n_samples x n_muscles)
+    """
+    emg_min = np.min(emg_data)
+    emg_max = np.max(emg_data)
+    W_min = np.min(W)
+    W_max = np.max(W)
+    W_scaled = ((W - W_min) / (W_max - W_min)) * (emg_max - emg_min) + emg_min
+    W_scaled = np.maximum(W_scaled, 0)  # Ensures W_scaled is non-negative
+    return W_scaled
 
-def plot_all_results(emg_data, Z_reconstructed, W_scaled, H, selected_synergies):
+
+
+def plot_all_results(emg_data, Z_reconstructed, W, H, selected_synergies):
     """
     Visualizes EMG analysis results in a 4-panel comparative plot.
     
@@ -24,7 +46,12 @@ def plot_all_results(emg_data, Z_reconstructed, W_scaled, H, selected_synergies)
         2. Reconstructed signals
         3. Synergy activations over time
         4. Muscle weightings per synergy
-    """
+        """
+    
+    print(f'Plotting results...')
+
+    W_scaled = scale_synergy_signal(W, emg_data)
+
     plt.figure(figsize=(10, 8))
     
     # Panel 1: Original EMG Signals
@@ -64,6 +91,8 @@ def plot_all_results(emg_data, Z_reconstructed, W_scaled, H, selected_synergies)
 
 
 #------------------------------------------------------------------------------------------
+
+
 
 def plot_signal(emg_data_dict, pose_name=None):
     """
@@ -109,7 +138,7 @@ def plot_signal(emg_data_dict, pose_name=None):
 #------------------------------------------------------------------------------------------
 
 
-def plot_vaf(max_synergies, VAF_values):
+def plot_vaf(max_synergies=8, VAF_values=None):
     """
     Visualizes the Variance Accounted For (VAF) against the number of synergies.
     """

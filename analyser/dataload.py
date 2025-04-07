@@ -2,7 +2,7 @@ from config.importer import *
 from helper.config_help import *
 from helper.dataload_help import *
 
-class DataLoader:
+class emgDataLoader:
     """
     A class to handle loading of EMG data and configuration for muscle synergy analysis.
     """
@@ -99,9 +99,10 @@ class DataLoader:
         ]
 
         emg_data_combined, timestamps_combined = load_combined_emg_data(paths, config["emg_topic"])
-        
-        print(f"\nLoaded combined dataset for gestures Rep {pinch_rep}{ulnar_rep}{power_rep}:\n")
-        print(f"  Samples: {emg_data_combined.shape[0]}, Muscles: {emg_data_combined.shape[1]}\n\n")
+        print(f'\nLoading data...')
+        print(f"\nLoaded combined dataset for gestures Rep {pinch_rep}{ulnar_rep}{power_rep}:")
+        print(f"  Samples: {emg_data_combined.shape[0]}")
+        print(f"  Muscles: {emg_data_combined.shape[1]}\n")
 
         return emg_data_combined, timestamps_combined
 

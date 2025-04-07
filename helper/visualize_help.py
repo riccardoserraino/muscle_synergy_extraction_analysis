@@ -85,6 +85,7 @@ def plot_all_results(emg_data, Z_reconstructed, W, H, selected_synergies):
     plt.xlabel('Muscle Channel')
     plt.ylabel('Weight')
     plt.legend(loc='upper right', ncol=selected_synergies)
+    plt.xticks([])
 
     plt.tight_layout()
     plt.show()
@@ -94,7 +95,26 @@ def plot_all_results(emg_data, Z_reconstructed, W, H, selected_synergies):
 
 
 
-def plot_signal(emg_data_dict, pose_name=None):
+def plot_signal(data, name):
+
+    plt.figure(figsize=(6, 4))
+
+    plt.plot(data)
+    plt.title(name)
+    plt.ylabel('Amplitude (mV)')
+    plt.xticks([])  # Remove x-axis labels for cleaner visualization
+    plt.legend()
+
+    plt.tight_layout()
+    plt.show()
+
+
+#------------------------------------------------------------------------------------------
+
+
+
+
+def plot_signal_dict(emg_data_dict, pose_name=None):
     """
     Visualizes EMG data from a dictionary of repetitions.
     
@@ -148,3 +168,86 @@ def plot_vaf(max_synergies=8, VAF_values=None):
     plt.ylabel('VAF')
     plt.title('VAF vs Number of Synergies')
     plt.show()
+
+
+
+#------------------------------------------------------------------------------------------
+
+
+
+
+def plot_reconstruction(emg_data, Z_reconstructed, W, selected_synergies):
+    """
+    Visualizes EMG analysis results in a 3-panel comparative plot.
+    
+    Implementation:
+    - Creates figure with 4 vertically stacked subplots
+    - Uses consistent scaling for comparison
+    - Automatically handles variable synergy counts
+    - Preserves non-negativity of muscle activations
+    
+    Args:
+        emg_data: Raw EMG (n_samples x n_muscles)
+        Z_reconstructed: Reconstructed signal (n_samples x n_muscles)
+        W_scaled: Normalized activations (n_samples x n_synergies)
+        selected_synergies: Number of synergies 
+        
+    Produces:
+        Interactive matplotlib figure with:
+        1. Original EMG signals
+        2. Reconstructed signals
+        3. Synergy activations over time
+        """
+    
+    print(f'Plotting results...')
+
+    W_scaled = scale_synergy_signal(W, emg_data)
+
+    plt.figure(figsize=(10, 6))
+    
+    # Panel 1: Original EMG Signals
+    plt.subplot(3, 1, 1)
+    plt.plot(emg_data)
+    plt.title('Original EMG Signals')
+    plt.ylabel('Amplitude (mV)')
+    plt.xticks([])  # Remove x-axis labels for cleaner visualization
+    
+    # Panel 2: Reconstructed EMG Signals
+    plt.subplot(3, 1, 2)
+    plt.plot(Z_reconstructed, linestyle='--')
+    plt.title(f'Reconstructed EMG ({selected_synergies} Synergies)')
+    plt.ylabel('Amplitude (mV)')
+    plt.xticks([])
+    
+    # Panel 3: Synergy Activation Patterns
+    plt.subplot(3, 1, 3)
+    for i in range(selected_synergies):
+        plt.plot(W_scaled[:, i], label=f'Synergy {i+1}')
+    plt.title('Synergy Activation Over Time')
+    plt.ylabel('Activation')
+    plt.legend(loc='upper right', ncol=selected_synergies)
+    plt.xticks([])
+    
+    
+    plt.tight_layout()
+    plt.show()
+
+
+#------------------------------------------------------------------------------------------
+
+
+def plot_synergies_separated(latent_space, syn_np, emg_data_np, rec_data_np):
+    plt.figure(figsize=(10,6))
+    for i in range(latent_space):
+        plt.subplot(latent_space+1,1,i+1)
+        plt.plot(syn_np[:,i], label=f'Synergy {i+1}')
+        plt.legend()
+    plt.subplot(latent_space+1,1,latent_space+1)
+    plt.tight_layout()
+    plt.plot(rec_data_np[:,0], 'k', label='Reconstructed EMG')
+    plt.plot(emg_data_np[:,0], 'r', label='Original EMG')
+    plt.legend()
+
+    print("Synergy positivity check:", (syn_np >= 0).all())
+    print("Synergy ranges:", [f"{i}: {syn_np[:,i].min():.2f}-{syn_np[:,i].max():.2f}" 
+                            for i in range(latent_space)], '\n')

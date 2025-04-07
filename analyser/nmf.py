@@ -4,7 +4,7 @@ from helper.nmf_help import *
 
 
 
-class NMFExtractor:
+class emgNMF:
     """
     A class to perform Non-negative Matrix Factorization (NMF) tasks on EMG data.
     """

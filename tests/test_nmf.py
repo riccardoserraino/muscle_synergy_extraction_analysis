@@ -5,11 +5,13 @@ from helper.visualize_help import *
 # Initialization for yaml file directory
 config_dir = "C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/config/config.yaml"
 
-# Load emg data for all gestures
-pinch_ulnar_power_dict = DataLoader(config_dir).combined_poses_dict()
-pinch_ulnar_power_000, ts_000 = DataLoader(config_dir).combined_dataset('0', '0', '0')
+loader = emgDataLoader(config_dir)
 
-extractor = NMFExtractor(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
+# Load emg data for all gestures
+pinch_ulnar_power_dict = loader.combined_poses_dict()
+pinch_ulnar_power_000, ts_000 = loader.combined_dataset('0', '0', '0')
+
+extractor = emgNMF(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
 
 # Evaluate Synergy number and Sparsity
 optimal_synergies, optimal_alpha, cv_results, sparsity_results = extractor.synergy_sparsity_extractor()

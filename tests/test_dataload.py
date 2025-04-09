@@ -16,4 +16,8 @@ pinch_ulnar_power = emgDataLoader(config_dir).combined_poses_dict()
 pinch1_emg, pinch1_ts = emgDataLoader(config_dir, "pinch").single_dataset("1")
 
 # Load emg data for combined gestures
-pinch_emg, pinch_ts = emgDataLoader(config_dir, "pinch").combined_dataset("0", "0", "0")
+pin_uln_pow_000_emg, pin_uln_pow_000_ts = emgDataLoader(config_dir).combined_dataset_3("0", "0", "0")
+
+# Load emg data for combined gestures with different repetitions and pose numbers
+comb2_emg, comb2_ts= emgDataLoader(config_dir).combined_dataset(combination_name='combination_2', reps='1111')
+

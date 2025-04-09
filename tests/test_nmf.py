@@ -7,9 +7,9 @@ config_dir = "C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/config/con
 
 loader = emgDataLoader(config_dir)
 
-# Load emg data for all gestures
+# Load emg data for all 3 gestures combined
 pinch_ulnar_power_dict = loader.combined_poses_dict()
-pinch_ulnar_power_000, ts_000 = loader.combined_dataset('0', '0', '0')
+pinch_ulnar_power_000, ts_000 = loader.combined_dataset_3('0', '0', '0')
 
 extractor = emgNMF(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
 

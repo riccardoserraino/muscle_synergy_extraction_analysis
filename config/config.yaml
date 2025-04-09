@@ -4,6 +4,7 @@
 
 base_data_dir: "C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/datasets/"
 
+
 single_pose:
   pinch:
     "0": "rep0_pinch.bag"
@@ -18,8 +19,9 @@ single_pose:
     "1": "rep1_power.bag"
     "2": "rep2_power.bag"
 
-pinch_ulnar_power: ["pinch", "ulnar", "power"]
 
+pinch_ulnar_power: ["pinch", "ulnar", "power"]
+combination_2: ["pinch", "ulnar", "power", "pinch"]
 
 
 emg_topic: "emg_rms"

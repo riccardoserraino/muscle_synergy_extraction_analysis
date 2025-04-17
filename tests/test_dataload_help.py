@@ -4,7 +4,7 @@ from helper.dataload_help import *
 
 
 # Load YAML file
-with open("C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/config/config.yaml", "r") as f:
+with open("C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/config/config.yaml", "r") as f:
     config = yaml.safe_load(f)
     if not config:
         raise ValueError("YAML file is empty or not properly formatted.")

@@ -4,15 +4,15 @@ from helper.visualize_help import *
 from analyser.autoencoder import *
 
 # Initialization for yaml file directory
-config_dir = "C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/config/config.yaml"
+config_dir = "C:/Users/ricca/Desktop/int_unibo/muscle_synergy_analysis/config/config.yaml"
 
 # Load emg data for all gestures combined
-pinch_ulnar_power_pinch_0000, ts_0000 = emgDataLoader(config_dir).combined_dataset(reps='0000', combination_name='combination_2')
+pinch_ulnar_power_000, ts_000 = emgDataLoader(config_dir).combined_dataset(reps='000', combination_name='pinch_ulnar_power')
 single_pose, ts_single = emgDataLoader(config_dir, pose_name='pinch').single_dataset()
 
 # Data tensor creation
-# data_tensor = torch.tensor(pinch_ulnar_power_pinch_0000, dtype=torch.float32)
-data_tensor = torch.tensor(single_pose, dtype=torch.float32)
+data_tensor = torch.tensor(pinch_ulnar_power_000, dtype=torch.float32)
+# data_tensor = torch.tensor(single_pose, dtype=torch.float32)
 
 # Reset random seed for reproducibility
 # This is important for consistent results across different runs

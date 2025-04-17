@@ -238,6 +238,7 @@ def plot_reconstruction(emg_data, Z_reconstructed, W, selected_synergies):
 
 def plot_synergies_separated(latent_space, syn_np, emg_data_np, rec_data_np):
     plt.figure(figsize=(10,6))
+    scale_synergy_signal(syn_np, emg_data_np)
     for i in range(latent_space):
         plt.subplot(latent_space+1,1,i+1)
         plt.plot(syn_np[:,i], label=f'Synergy {i+1}')

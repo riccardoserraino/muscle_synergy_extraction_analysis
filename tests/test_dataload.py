@@ -1,7 +1,7 @@
 from analyser.dataload import *
 
 # Initialization for yaml file directory
-config_dir = "C:/Users/ricca/Desktop/th_unibo/muscle_synergy_analysis/config/config.yaml"
+config_dir = "C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/config/config.yaml"
 
 # Load YAML file
 config = emgDataLoader(config_dir)._load_config()      

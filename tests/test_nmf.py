@@ -14,11 +14,18 @@ pinch_ulnar_power_000, ts_000 = loader.combined_dataset_3('0', '0', '0')
 extractor = emgNMF(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
 
 # Evaluate Synergy number and Sparsity
-optimal_synergies, optimal_alpha, cv_results, sparsity_results = extractor.synergy_sparsity_extractor()
-W, H = extractor.SparseNMF(S_alpha_W=optimal_alpha['alpha'])
-reconstructed_data = extractor.NMF_reconstruction(optimal_synergies, W, H)
+# optimal_synergies, optimal_alpha, optimal_l1, cv_results, sparsity_results = extractor.synergy_sparsity_extractor()
+optimal_synergies = 3
 
-# Plotting the results
-plot_error()
-plot_all_results(pinch_ulnar_power_000, reconstructed_data, W, H, optimal_synergies)
+# Sparse NMF application
+s_U, s_S_m = extractor.SparseNMF()
+s_reconstructed_data = extractor.NMF_reconstruction(optimal_synergies, s_U, s_S_m)
+# Plotting sparse results
+plot_all_results(pinch_ulnar_power_000, s_reconstructed_data, s_U, s_S_m, optimal_synergies)
 
+
+# Classical NMF
+U, S_m = extractor.ClassicNMF()
+reconstructed_data = extractor.NMF_reconstruction(optimal_synergies, U, S_m)
+# Plotting classical results
+plot_all_results(pinch_ulnar_power_000, reconstructed_data, U, S_m, optimal_synergies)

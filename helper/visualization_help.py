@@ -44,7 +44,7 @@ def plot_all_results(emg_data, Z_reconstructed, W, H, selected_synergies):
         4. Muscle weightings per synergy (S_m or W)
     """
     
-    print(f'Plotting results...')
+    print(f'Plotting results...\n\n')
 
     W_scaled = scale_synergy_signal(W, emg_data)
 

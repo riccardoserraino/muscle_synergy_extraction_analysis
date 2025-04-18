@@ -30,7 +30,7 @@ def vaf(X, X_estimated):
 
 
 # frob_error_percent
-def frob_error(X, X_estimated):
+def frobenius_error(X, X_estimated):
     """
     Computes the Frobenius norm error between original and estimated data.
 
@@ -69,9 +69,13 @@ def rmse(X, X_estimated):
     """
 
     N = X.shape[0]                                          # Number of features
-    frob_err, frob_percent = frob_error(X, X_estimated)     # Frobenius error and percentage
+    frob_err, frob_percent = frobenius_error(X, X_estimated)     # Frobenius error and percentage
     
     rmse_value = np.sqrt(frob_err/N)  # RMSE calculation
 
     return rmse_value
+
+
+
+#--------------------------------------------------------------------------------------------
 

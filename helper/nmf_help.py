@@ -1,6 +1,6 @@
 from config.importer import *
 from helper.config_help import *
-
+from helper.error_help import *
 
 def find_elbow(values, min_synergies):
     """
@@ -65,38 +65,27 @@ def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_
 
 
 
-#------------------------------------------------------------------------
-
-
-
-def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, random_state):
-
-
-    VAF_values = []
-
-    for n in range(1, max_synergies + 1):
-        W, H, Z, rec_err = apply_nmf(emg_data, n, init=init, max_iter=max_iter, l1_ratio=l1_ratio, alpha_W=alpha_W, random_state=random_state)
-        VAF = 1 - np.sum((emg_data - Z) ** 2) / np.sum(emg_data ** 2)
-        VAF_values.append(VAF)
-        print(f"VAF for {n} synergies: {VAF:.4f}")
-
-    return VAF_values
-
-
 
 #------------------------------------------------------------------------
 
 
 
-def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_synergies):
+def cross_validate_synergies(reps_dict, max_synergies, alpha_W, l1_ratio, min_synergies):
     """
     Determine optimal synergy count via cross-validation.
     
     Args: 
+        - reps_dict: dictionary containining the all the repositories to cross validate
+        - max_synergies. max number of synergies
+        - alpha: alpha value of W matrix for regularization
+        - l1_ratio: sparness parameter
+        - min_synergies: minimum number of synergies
     
-    Returns:
-    (optimal_synergies, variance_results)
+    Outputs:
+        - optimal_synergies: optimal number of synergies extracted based on elbow point
+        - results: avg variance results based on the number of synergies
     """
+
     # Extract the repetitions from the dictionary
     rep0 = reps_dict['0']
     rep1 = reps_dict['1'] 
@@ -105,7 +94,7 @@ def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_syne
     synergy_range = range(1, max_synergies + 1)
     results = []
     
-    print("\nRunning cross-validation for synergy selection...")
+    print("\nRunning cross-validation (CV) for synergy selection...")
     for n in synergy_range:
         fold_metrics  = []
         # Create all possible train/test splits
@@ -116,20 +105,18 @@ def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_syne
         ]:
             try:
                 model = NMF(n_components=n, 
-                            alpha_W=alpha, 
-                            alpha_H=0, 
+                            alpha_W=alpha_W, 
                             l1_ratio=l1_ratio, 
                             init='nndsvd', 
                             max_iter=500, 
                             random_state=42)
                 W_train = model.fit_transform(X_train)
                 
-                # Calculate metrics
+                # Calculate error metrics (VAF)
                 X_recon = model.transform(X_test) @ model.components_
-                recon_error = np.linalg.norm(X_test - X_recon, 'fro')
-                var_explained = 1 - (recon_error**2 / np.sum(X_test**2))
+                vaf_value = vaf(X_test, X_recon)
 
-                fold_metrics.append(var_explained)
+                fold_metrics.append(vaf_value)
 
             except Exception as e:
                 print(f"Warning: {n} synergies failed - {str(e)}")
@@ -158,12 +145,12 @@ def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_syne
 
 
 
-def sparsity_evaluation(reps_dict, n_synergies, alpha_values, l1_ratio):
+def sparsity_evaluation(reps_dict, n_synergies, alpha_values, l1_ratio_values):
     """
-    Evaluate sparsity parameters for given synergy count.
+    Evaluate sparsity parameters for given synergy count across alpha and l1_ratio values.
     
     Implementation:
-    - Tests range of alpha values
+    - Tests grid of alpha and l1_ratio values
     - Tracks multiple quality metrics
     - Uses conservative sparsity on components
     - Detailed progress reporting
@@ -176,38 +163,45 @@ def sparsity_evaluation(reps_dict, n_synergies, alpha_values, l1_ratio):
     results = []
 
     print("\nEvaluating sparsity parameters...")
+    print(f"Testing {len(alpha_values)} alpha values and {len(l1_ratio_values)} l1_ratio values")
+    
     for alpha in alpha_values:
-        try:
-            model = NMF(n_components=n_synergies, 
-                        alpha_W=alpha, 
-                        alpha_H=0, 
-                        l1_ratio=l1_ratio,
-                        init='nndsvd', 
-                        max_iter=500, 
-                        random_state=42)
-            W = model.fit_transform(X)
-            U = model.components_
-            
-            # Calculate multiple metrics
-            recon_error = np.linalg.norm(X - W @ U, 'fro')
-            var_explained = 1 - (recon_error**2 / np.sum(X**2))
-            sparsity = (np.count_nonzero(U == 0) / U.size) * 100
-            condition_number = np.linalg.cond(U)
-            
-            results.append({
-                'alpha': alpha,
-                'error': recon_error,
-                'variance': var_explained,
-                'sparsity': sparsity,
-                'condition': condition_number
-            })
+        for l1_ratio in l1_ratio_values:
+            try:
+                model = NMF(n_components=n_synergies, 
+                          alpha_W=alpha, 
+                          alpha_H=0, 
+                          l1_ratio=l1_ratio,
+                          init='nndsvd', 
+                          max_iter=500, 
+                          random_state=42)
+                U = model.fit_transform(X)
+                S_m = model.components_
+                X_recon = U @ S_m
 
-            print(f"  - α={alpha:.3f}: Var={var_explained:.2%}, " 
-                  f"Sparsity={sparsity:.1f}%, Cond={condition_number:.1f}")
-        
-        except Exception as e:
-            print(f"  - α={alpha:.3f} failed: {str(e)}")
-            continue
+                # Calculate multiple metrics
+                frob_error = frobenius_error(X, X_recon)
+                vaf_value = vaf(X, X_recon)
+                sparsity = (np.count_nonzero(U == 0) / U.size) * 100
+                condition_number = np.linalg.cond(U)
+                
+                results.append({
+                    'alpha': alpha,
+                    'l1_ratio': l1_ratio,
+                    'error': frob_error,
+                    'vaf': vaf_value,
+                    'sparsity': sparsity,
+                    'condition': condition_number
+                })
+
+                print(f"  - α={alpha:.3f}, l1={l1_ratio:.2f}: "
+                      f"Vaf={vaf_value:.2%}, "
+                      f"Sparsity={sparsity:.1f}%, "
+                      f"Cond={condition_number:.1f}")
+            
+            except Exception as e:
+                print(f"  - α={alpha:.3f}, l1={l1_ratio:.2f} failed: {str(e)}")
+                continue
 
     return results
 
@@ -217,30 +211,50 @@ def sparsity_evaluation(reps_dict, n_synergies, alpha_values, l1_ratio):
 
 
 
-def best_alpha(sparsity_results, var_weight, sparsity_weight, cond_weight):
+def best_sparsity_param(sparsity_results, var_weight=0.5, sparsity_weight=0.3, cond_weight=0.2):
     """
-    Select best alpha based on multiple criteria.
+    Selects the best (alpha, l1_ratio) combination based on weighted criteria.
+    
+    Args:
+        - sparsity_results : list of dicts (Results from sparsity_evaluation() function)
+        - var_weight : float
+        - sparsity_weight : float
+        - cond_weight : float
+        
+    
+    Returns:
+    - tuple:
+        best_alpha, best_l1_ratio 
     """
     if not sparsity_results:
         raise ValueError("No valid sparsity results")
     
-    # Normalize metrics
-    vars = np.array([r['variance'] for r in sparsity_results])
+    # Extract metrics
+    vars = np.array([r['vaf'] for r in sparsity_results])
     spars = np.array([r['sparsity'] for r in sparsity_results])
     conds = np.array([r['condition'] for r in sparsity_results])
     
-    # Higher variance and sparsity are better, lower condition number is better
-    norm_vars = (vars - np.min(vars)) / (np.max(vars) - np.min(vars))
-    norm_spars = (spars - np.min(spars)) / (np.max(spars) - np.min(spars))
-    norm_conds = 1 - ((conds - np.min(conds)) / (np.max(conds) - np.min(conds)))
+    # Normalize (higher better for variance/sparsity, lower better for condition)
+    norm_vars = (vars - vars.min()) / (vars.max() - vars.min())
+    norm_spars = (spars - spars.min()) / (spars.max() - spars.min())
+    norm_conds = 1 - ((conds - conds.min()) / (conds.max() - conds.min()))
     
-    # Combined score
-    scores = (var_weight * norm_vars + 
-              sparsity_weight * norm_spars + 
-              cond_weight * norm_conds)
+    # Calculate weighted score
+    weights = np.array([var_weight, sparsity_weight, cond_weight])
+    weights /= weights.sum()  # Normalize weights to sum to 1
     
+    scores = (weights[0] * norm_vars + 
+             weights[1] * norm_spars + 
+             weights[2] * norm_conds)
+    
+    # Get best index
     best_idx = np.argmax(scores)
-    return sparsity_results[best_idx]
+    
+    # Return tuple of best parameters
+    best_alpha = sparsity_results[best_idx]['alpha']
+    best_l1 = sparsity_results[best_idx]['l1_ratio']
+    
+    return best_alpha, best_l1
 
 
 
@@ -266,6 +280,28 @@ def explain_frobenius_error(original, reconstructed):
         'per_sample_error': error / (n_samples * n_muscles),
         'per_muscle_error': [np.mean(np.abs(original[:,i] - reconstructed[:,i])) for i in range(n_muscles)]
     }
+
+
+
+
+
+#------------------------------------------------------------------------
+
+
+
+def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, random_state):
+
+
+    VAF_values = []
+
+    for n in range(1, max_synergies + 1):
+        W, H, Z, rec_err = apply_nmf(emg_data, n, init=init, max_iter=max_iter, l1_ratio=l1_ratio, alpha_W=alpha_W, random_state=random_state)
+        VAF = 1 - np.sum((emg_data - Z) ** 2) / np.sum(emg_data ** 2)
+        VAF_values.append(VAF)
+        print(f"VAF for {n} synergies: {VAF:.4f}")
+
+    return VAF_values
+
 
 
 

@@ -28,13 +28,10 @@ def load_emg_data(bag_path, topic_name):
     timestamps = np.array(timestamps)   
 
     # Ensure emg_data is shaped correctly (samples × muscles)
-    if emg_data.shape[0] < emg_data.shape[1]:  # If (n_muscles, n_samples), transpose it
-        emg_data = emg_data.T  # Now it’s (n_samples, n_muscles)
+    if emg_data.shape[0] < emg_data.shape[1]:   # If (n_muscles, n_samples), transpose it
+        emg_data = emg_data.T                   # Now it’s (n_samples, n_muscles)
     
-    """if emg_data.all() != None and timestamps.all() != None:
-        print(f"Loaded {emg_data.shape[0]} samples and {emg_data.shape[1]} muscles from {bag_path}.")
-    else:
-        print("Failed to load data for the single selected gesture.")"""
+    
     return emg_data, timestamps
 
 
@@ -56,18 +53,15 @@ def load_pose_repetitions(pose_paths_dict, topic_name, pose_name):
     """
     loaded_data = {}
     
-    print(f"\nLoading data for {len(pose_paths_dict)} {pose_name} repetitions...\n")
+    print(f"\nLoading data for {len(pose_paths_dict)} {pose_name} repetitions (single pose dictionary creation)...\n")
     for rep_id, bag_path in pose_paths_dict.items():
         try:
             emg_data, timestamps = load_emg_data(bag_path, topic_name)
             loaded_data[rep_id] = (emg_data, timestamps)
-            print(f"  - Rep {rep_id} loaded successfully")
-            print(f"    Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}")
-            print(f"    Duration: {timestamps[-1] - timestamps[0]:.2f} seconds")
         except Exception as e:
             print(f"Error loading Rep {rep_id} from {bag_path}: {str(e)}")
             loaded_data[rep_id] = (None, None)
-    print(f"\nLoaded {len(loaded_data)} repetitions for {pose_name}.\n")
+    print(f"Succesfully loaded {len(loaded_data)} repetitions for {pose_name}.\n\n")
     return loaded_data
 
 
@@ -132,8 +126,8 @@ def load_combined_pose_repetitions(pose_paths_dicts, topic_name, pose_names):
     # Get all common repository numbers
     common_reps = set.intersection(*[set(d.keys()) for d in pose_paths_dicts])
     
-    print(f"\nCombining data for poses: {', '.join(pose_names)}")
-    print(f"Found {len(common_reps)} common repositories\n")
+    print(f"\nCombining and loading data for poses: {', '.join(pose_names)}...")
+    print(f"(Found {len(common_reps)} common repositories, for dictionary creation)\n")
     
     for rep_id in sorted(common_reps, key=int):
         try:
@@ -150,21 +144,17 @@ def load_combined_pose_repetitions(pose_paths_dicts, topic_name, pose_names):
                 
                 emg_parts.append(emg_data)
                 ts_parts.append(timestamps)
-                
-                print(f"  - {pose_name.capitalize()} Rep {rep_id} loaded")
-                print(f"    Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}")
-                print(f"    Duration: {timestamps[-1] - timestamps[0]:.2f} seconds")
             
             # Combine all pose data for this repository
             combined_emg = np.vstack(emg_parts)
             combined_ts = np.concatenate(ts_parts)
             
             combined_data[rep_id] = (combined_emg, combined_ts)
-            print(f"\nCombined repository {rep_id}: Total samples {combined_emg.shape[0]}\n")
             
         except Exception as e:
             print(f"Error combining Rep {rep_id}: {str(e)}")
             combined_data[rep_id] = (None, None)
     
-    print(f"\nSuccessfully combined {len(combined_data)} repositories.\n")
+    print(f'Succesfully loaded {len(combined_data)} repetitions for {pose_names}.\n\n')
+    
     return combined_data

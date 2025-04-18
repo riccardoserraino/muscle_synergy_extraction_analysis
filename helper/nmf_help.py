@@ -4,19 +4,14 @@ from helper.config_help import *
 
 def find_elbow(values, min_synergies):
     """
-    Detect optimal point in variance-explained curve.
+    Detect convergence point in curve.
     
-    Implementation:
-    - Uses vector geometry to find point farthest from line
-    connecting first and last points
-    - Ensures minimum synergy constraint
+    Args:
+        values: List of error values
+        min_synergies: Minimum number of synergies to consider
     
-    Rationale:
-    The "elbow" represents the point of diminishing returns
-    where adding more synergies provides little improvement
-    
-    Returns:
-    Index of optimal synergy count
+    Outputs:
+        Elbow point index
     """
     if len(values) < 3:
         return min_synergies - 1  # return index for minimum synergies
@@ -40,16 +35,33 @@ def find_elbow(values, min_synergies):
 
 
 def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_state):
+    """
+    Applies Non-negative Matrix Factorization (NMF) to EMG data.
+
+    Args:
+        emg_data: Input EMG data (n_samples x n_muscles).
+        n_components: Number of synergies to extract.
+        init: Initialization method for NMF. 
+        max_iter: Maximum number of iterations for NMF.
+        l1_ratio: L1 ratio for sparse NMF.
+        alpha_W: Regularization parameter for U matrix in NMF.
+        random_state: Random seed for reproducibility.
+
+    Outputs:
+        U: Synergy activations over time (Neural drive matrix)
+        S_m: Muscle patterns (Muscular synergy matrix)
+
+    """
     nmf = NMF(n_components=n_components, init=init, max_iter=max_iter, l1_ratio=l1_ratio, alpha_W=alpha_W, random_state=random_state) # Setting Sparse NMF parameters
-    W = nmf.fit_transform(emg_data)  # Synergy activations
-    H = nmf.components_  # Muscle patterns
-    # Transpose W and H to match the correct shapes if needed
-    if W.shape[0] != emg_data.shape[0]:
-        W = W.T  # Ensure W has shape (n_samples, n_synergies)
-    if H.shape[0] != n_components:
-        H = H.T  # Ensure H has shape (n_synergies, n_muscles)
+    U = nmf.fit_transform(emg_data)         # Synergy activations over time (Neural drive matrix)
+    S_m = nmf.components_                   # Muscle patterns (Muscular synergy matrix)
     
-    return W, H
+    # Transpose W and H to match the correct shapes if needed
+    if U.shape[0] != emg_data.shape[0]:
+        U = U.T         # Ensure U has shape (n_samples, n_synergies)
+    if S_m.shape[0] != n_components:
+        S_m = S_m.T     # Ensure S_m has shape (n_synergies, n_muscles)
+    return U, S_m
 
 
 
@@ -58,6 +70,8 @@ def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_
 
 
 def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, random_state):
+
+
     VAF_values = []
 
     for n in range(1, max_synergies + 1):
@@ -74,42 +88,11 @@ def compute_vaf(emg_data, max_synergies, l1_ratio, init, max_iter, alpha_W, rand
 
 
 
-def scale_synergy_signal(W, emg_data):
-    """
-    Normalizes synergy activations to match original EMG amplitude range.
-    
-    Implementation:
-    - Linear scaling preserving activation dynamics
-    - Maintains non-negativity constraint
-    - Handles both single and multi-channel EMG
-    
-    Args:
-        W: Activation matrix (n_samples x n_synergies)
-        emg_data: Original EMG (n_samples x n_muscles)
-    """
-    emg_min = np.min(emg_data)
-    emg_max = np.max(emg_data)
-    W_min = np.min(W)
-    W_max = np.max(W)
-    W_scaled = ((W - W_min) / (W_max - W_min)) * (emg_max - emg_min) + emg_min
-    W_scaled = np.maximum(W_scaled, 0)  # Ensures W_scaled is non-negative
-    return W_scaled
-
-
-
-#------------------------------------------------------------------------
-
-
-
 def cross_validate_synergies(reps_dict, max_synergies, alpha, l1_ratio, min_synergies):
     """
     Determine optimal synergy count via cross-validation.
     
-    Implementation:
-    - 3-fold cross-validation (leave-one-repetition-out)
-    - Uses variance explained as primary metric
-    - Applies light sparsity only to activation patterns
-    - Robust error handling
+    Args: 
     
     Returns:
     (optimal_synergies, variance_results)

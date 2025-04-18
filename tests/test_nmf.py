@@ -1,6 +1,6 @@
 from analyser.nmf import *
 from analyser.dataload import *
-from helper.visualize_help import *
+from helper.visualization_help import *
 
 # Initialization for yaml file directory
 config_dir = "C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/config/config.yaml"
@@ -19,6 +19,6 @@ W, H = extractor.SparseNMF(S_alpha_W=optimal_alpha['alpha'])
 reconstructed_data = extractor.NMF_reconstruction(optimal_synergies, W, H)
 
 # Plotting the results
-plot_vaf(VAF_values=cv_results)
+plot_error()
 plot_all_results(pinch_ulnar_power_000, reconstructed_data, W, H, optimal_synergies)
 

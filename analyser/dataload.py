@@ -40,6 +40,7 @@ class emgDataLoader:
         """
         config = self._load_config()
         pose_paths = get_pose_paths(config, self.pose_name)
+        
         return load_pose_repetitions(pose_paths, config["emg_topic"], self.pose_name)
     
 
@@ -57,7 +58,7 @@ class emgDataLoader:
         power_paths = get_pose_paths(config, "power")
 
         poses_paths = [pinch_paths, ulnar_paths, power_paths]
-        poses_names = ["pinch", "ulnar", "power"]  # Fixed: Use literal list instead of config key
+        poses_names = ["pinch", "ulnar", "power"]  
 
         return load_combined_pose_repetitions(poses_paths, config["emg_topic"], poses_names) 
 
@@ -82,9 +83,11 @@ class emgDataLoader:
         bag_path = pose_paths[rep_id]
         emg_data, timestamps = load_emg_data(bag_path, config["emg_topic"])
         
-        print(f"\nLoaded single dataset for {self.pose_name} Rep {rep_id}:\n")
-        print(f"  Samples: {emg_data.shape[0]}, Muscles: {emg_data.shape[1]}\n\n")
-        
+        print(f"\nLoading single dataset for {self.pose_name} rep {rep_id}...\n")
+        print(f'Succesfully loaded {self.pose_name} for rep {rep_id}.')
+        print(f"  -Samples: {emg_data.shape[0]}")
+        print(f"  -sEMG: {emg_data.shape[1]}\n\n")
+         
         return emg_data, timestamps
     
 
@@ -99,10 +102,10 @@ class emgDataLoader:
         ]
 
         emg_data_combined, timestamps_combined = load_combined_emg_data(paths, config["emg_topic"])
-        print(f'\nLoading data...')
-        print(f"\nLoaded combined dataset for gestures Rep {pinch_rep}{ulnar_rep}{power_rep}:")
-        print(f"  Samples: {emg_data_combined.shape[0]}")
-        print(f"  Muscles: {emg_data_combined.shape[1]}\n")
+        print(f"\nLoading combined data for the 3 gestures of rep {pinch_rep}{ulnar_rep}{power_rep}...\n")
+        print(f'Succesfully loaded pinch, ulnar, power for rep {pinch_rep}{ulnar_rep}{power_rep}.')
+        print(f"  -Samples: {emg_data_combined.shape[0]}")
+        print(f"  -sEMG: {emg_data_combined.shape[1]}\n\n")
 
         return emg_data_combined, timestamps_combined
 
@@ -120,8 +123,6 @@ class emgDataLoader:
         Returns:
             tuple: (emg_data_combined, timestamps_combined)
         """
-
-        print(f'\nLoading data...\n')
 
         config = self._load_config()
         
@@ -167,10 +168,11 @@ class emgDataLoader:
         # Load data
         emg_data_combined, timestamps_combined = load_combined_emg_data(paths, config["emg_topic"])
         
-        print(f"\nLoaded combination '{combination_name}':")
-        print(f"Poses: {', '.join(f'{p}(rep{rep})' for p, rep in zip(pose_names, reps))}")
-        print(f"Samples: {emg_data_combined.shape[0]}, Muscles: {emg_data_combined.shape[1]}\n")
-        
+        print(f"\nLoading combination '{combination_name}'...")
+        print(f"\nSuccesfully loaded poses: {', '.join(f'{p}(rep{rep})' for p, rep in zip(pose_names, reps))}")
+        print(f"  -Samples: {emg_data_combined.shape[0]}")
+        print(f"  -sEMG: {emg_data_combined.shape[1]}\n\n")
+
         return emg_data_combined, timestamps_combined
     
 

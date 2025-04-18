@@ -1,6 +1,6 @@
 from analyser.nmf import *
 from analyser.dataload import *
-from helper.visualize_help import *
+from helper.vis_err_help import *
 from analyser.autoencoder import *
 
 # Initialization for yaml file directory

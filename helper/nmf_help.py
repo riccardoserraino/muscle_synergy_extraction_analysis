@@ -1,5 +1,4 @@
 from config.importer import *
-from helper.config_help import *
 from helper.error_help import *
 
 def find_elbow(values, min_synergies):
@@ -52,6 +51,7 @@ def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_
         S_m: Muscle patterns (Muscular synergy matrix)
 
     """
+    
     nmf = NMF(n_components=n_components, init=init, max_iter=max_iter, l1_ratio=l1_ratio, alpha_W=alpha_W, random_state=random_state) # Setting Sparse NMF parameters
     U = nmf.fit_transform(emg_data)         # Synergy activations over time (Neural drive matrix)
     S_m = nmf.components_                   # Muscle patterns (Muscular synergy matrix)
@@ -61,6 +61,7 @@ def apply_nmf(emg_data, n_components, init, max_iter, l1_ratio, alpha_W, random_
         U = U.T         # Ensure U has shape (n_samples, n_synergies)
     if S_m.shape[0] != n_components:
         S_m = S_m.T     # Ensure S_m has shape (n_synergies, n_muscles)
+
     return U, S_m
 
 

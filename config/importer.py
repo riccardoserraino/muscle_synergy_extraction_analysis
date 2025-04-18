@@ -20,5 +20,7 @@ import torch.optim as optim
 from torch.utils.data import DataLoader, TensorDataset
 import random
 
+# for pca implementation
+from sklearn.decomposition import PCA
 
 

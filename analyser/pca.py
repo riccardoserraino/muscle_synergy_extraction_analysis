@@ -8,7 +8,7 @@ class emgPCA:
     A class to perform Principal Component Analysis (PCA) on EMG data.
     """
 
-    def __init__(self, emg_data=None, emg_data_dict=None):
+    def __init__(self, emg_data=None):
         """
         Initialize the PCA class with parameters and data.
         
@@ -17,7 +17,6 @@ class emgPCA:
         - emg_data_dict: Dictionary of EMG data for cross-validation
         """
         self.emg_data = emg_data
-        self.emg_data_dict = emg_data_dict
         
         # PCA parameters
         self.max_components = 8
@@ -35,14 +34,14 @@ class emgPCA:
         - explained_variance: Variance explained by each component
         """
         print("\nApplying PCA...")
-        S_m, U, mean = apply_pca(
+        S_m, U, mean, rec = apply_pca(
             emg_data=self.emg_data,
             n_components=self.max_components,
             svd_solver=self.svd_solver,
             random_state=self.random_state
         )
         print("\n\n")
-        return S_m, U, mean
+        return S_m, U, mean, rec
     
 
 

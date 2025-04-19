@@ -66,7 +66,7 @@ class emgError:
                 reconstruct = emgNMF.NMF_reconstruction(self, n, U, S_m)
 
             elif rec_type == 'pca':
-                S_m, U, mean = emgPCA.PCA(self)
+                S_m, U, mean, reconstruct___ = emgPCA.PCA(self)
                 reconstruct = emgPCA.PCA_reconstruction(self, U, S_m, mean, n)
 
             else:

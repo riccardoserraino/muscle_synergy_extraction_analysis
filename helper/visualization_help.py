@@ -291,20 +291,18 @@ def bar_chart_errors(pose_name, methods, single_list, list_computations):
     for i, comp in enumerate(list_computations):
         ax.bar(x + i * bar_width, comp, bar_width, label=methods[i])
         for j, val in enumerate(comp):
-            # Adjusted y-position (val + 0.01) to place it just above the bar
-            # Added rotation=45 for 45 degree angle
             ax.text(x[j] + i * bar_width, val + 0.001, f'{val:.3f}', 
                     ha='center', va='bottom', fontsize=7, rotation=45)
 
     # Add labels and formatting
     ax.set_xlabel('N° synergies')
     ax.set_ylabel('Accuracy computed')
-    ax.set_ylim(0, None)
+    ax.set_ylim(0, None)         # should set it about 0.3 fro, 0.55 vaf, 0 rmse
     ax.set_title(f'Comparison of Results Across Methods - {pose_name}')
     ax.set_xticks(x + bar_width)  # center tick labels
     ax.set_xticklabels([f'{i}' for i in range(1, num_values + 1)])
     ax.legend()
 
-    plt.ylim(0, None)
+    plt.ylim(0, None) # should set it about 0.3 fro, 0.55 vaf, 0 rmse
     plt.tight_layout()
     plt.show()

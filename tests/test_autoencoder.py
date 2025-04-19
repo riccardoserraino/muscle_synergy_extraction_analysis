@@ -1,6 +1,6 @@
 from analyser.nmf import *
 from analyser.dataload import *
-from helper.vis_err_help import *
+from helper.visualization_help import *
 from analyser.autoencoder import *
 
 # Initialization for yaml file directory
@@ -38,5 +38,4 @@ synergies_np = synergies.numpy()
 plot_synergies_separated(latent_space, synergies_np, emg_data_np, recon_data_np)
 plot_reconstruction(emg_data_np, recon_data_np, synergies_np, selected_synergies=synergies.shape[1])
 
-print(f'\nSession ended.')
 

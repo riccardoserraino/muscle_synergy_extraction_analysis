@@ -68,14 +68,21 @@ def rmse(X, X_estimated):
         rmse_value: RMSE value
     """
 
-    N = X.shape[0]                                          # Number of features
-    frob_err, frob_percent = frobenius_error(X, X_estimated)     # Frobenius error and percentage
-    
-    rmse_value = np.sqrt(frob_err/N)  # RMSE calculation
+    X = np.array(X)
+    X_estimated = np.array(X_estimated)
 
-    return rmse_value
+    if X.shape != X_estimated.shape:
+        raise ValueError("Input arrays must have the same shape.")
+    
+    mse = np.mean((X-X_estimated)**2)
+
+    rmse = np.sqrt(mse)
+
+    return 1 - rmse
 
 
 
 #--------------------------------------------------------------------------------------------
+
+
 

@@ -47,9 +47,9 @@ def frobenius_error(X, X_estimated):
     error_norm = np.linalg.norm(X - X_estimated, 'fro')  # Frobenius norm of error
     data_norm = np.linalg.norm(X, 'fro')                 # Frobenius norm of original data
 
-    frobenius_error_percent = (error_norm / data_norm)*100       # Relative error percentage  
+    frobenius_error = 1 - (error_norm / data_norm)      # Relative error  
 
-    return error_norm, frobenius_error_percent
+    return frobenius_error
 
 
 

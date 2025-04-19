@@ -66,8 +66,8 @@ class emgError:
                 reconstruct = emgNMF.NMF_reconstruction(self, n, U, S_m)
 
             elif rec_type == 'pca':
-                S_m, U = emgPCA.PCA(self)
-                reconstruct = emgPCA.PCA_reconstruction(self, U, S_m, n)
+                S_m, U, mean = emgPCA.PCA(self)
+                reconstruct = emgPCA.PCA_reconstruction(self, U, S_m, mean, n)
 
             else:
                 print(f'\nInvalid reconstruction type name.')
@@ -83,10 +83,9 @@ class emgError:
             else:
                 print(f'\nInvalid metric name.')
 
-            errors_list.append(1 - error)
+            errors_list.append(error)
             print(f"    Error for {n} synergies: {error:.4f}")
         
-
         
         print("\n\n")
         return errors_list

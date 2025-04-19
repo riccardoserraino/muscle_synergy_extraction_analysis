@@ -299,12 +299,12 @@ def bar_chart_errors(pose_name, methods, single_list, list_computations):
     # Add labels and formatting
     ax.set_xlabel('N° synergies')
     ax.set_ylabel('Accuracy computed')
-    ax.set_ylim(0.8, None)
+    ax.set_ylim(0, None)
     ax.set_title(f'Comparison of Results Across Methods - {pose_name}')
     ax.set_xticks(x + bar_width)  # center tick labels
     ax.set_xticklabels([f'{i}' for i in range(1, num_values + 1)])
     ax.legend()
 
-    plt.ylim(0.8, None)
+    plt.ylim(0, None)
     plt.tight_layout()
     plt.show()

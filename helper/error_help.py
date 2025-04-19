@@ -18,7 +18,7 @@ def vaf(X, X_estimated):
         X_estimated: Estimated data matrix (n_features x n_samples)
     
     Output: 
-        vaf_percent: Variance accounted for
+        vaf_percent: Variance accounted for (accuracy)
     """
 
     SS_error = np.sum((X - X_estimated) ** 2)       # Unexplained variance
@@ -39,8 +39,7 @@ def frobenius_error(X, X_estimated):
         X_estimated: Estimated data matrix (n_features x n_samples)
 
     Outputs:
-        error_norm: Frobenius norm of the error
-        frob_error_percent: Error percentage
+        frobenius_error: Frobenius norm of the error (accuracy)
 
     """
 
@@ -61,11 +60,11 @@ def rmse(X, X_estimated):
     Computes the Root Mean Square Error (RMSE) between original and estimated data.
 
     Args:
-        X: Original data matrix (n_features x n_samples)
-        X_estimated: Estimated data matrix (n_features x n_samples)
+        X: Original data matrix (n_samples x n_features) 
+        X_estimated: Estimated data matrix (n_samples x n_features)
 
     Outputs:
-        rmse_value: RMSE value
+        rmse_value: RMSE value (accuracy)
     """
 
     X = np.array(X)

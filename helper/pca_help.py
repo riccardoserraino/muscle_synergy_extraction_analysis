@@ -20,8 +20,10 @@ def apply_pca(emg_data, n_components, scale_U=False, random_state=None, svd_solv
     """
 
     pca = PCA(n_components=n_components, svd_solver=svd_solver, random_state=random_state)
-    U = pca.fit_transform(emg_data)            # Muscle patterns (Muscular synergy matrix)
-    S_m = pca.components_
+    U = pca.fit_transform(emg_data)             # Synergies over time
+    S_m = pca.components_                       # Muscle patterns (Muscular synergy matrix)
+
+    mean = pca.mean_
 
     if scale_U:
         # Scale scores by explained variance (makes them more comparable)
@@ -31,38 +33,12 @@ def apply_pca(emg_data, n_components, scale_U=False, random_state=None, svd_solv
     if S_m.shape[0] != n_components:
         S_m = S_m.T     # Ensure S_m has shape (n_synergies, n_muscles)
     
-    return S_m, U
 
-
-
-#---------------------------------------------------------------------------------------
-
-
-
-def pca_reconstruction(U, S_m, n_components):
-    """
-    Reconstruct the original data using selected PCA components.
-    
-    Args:
-        scores (U): PCA scores (n_samples x n_total_components)
-        components (S_m): PCA components (n_total_components x n_muscles)
-        n_components: Number of components to use for reconstruction
-        
-    Returns:
-        reconstructed: Reconstructed data matrix
-    """
-    
-    # Select the first n_components
-    U_rec = U[:, :n_components]
-    S_m_rec = S_m[:n_components, :]
-    
-    # Reconstruct the data
-    reconstructed = np.dot(U_rec, S_m_rec)
-    
-    return reconstructed
+    return S_m, U, mean
 
 
 
 #-------------------------------------------------------------------------------------------
+
 
 

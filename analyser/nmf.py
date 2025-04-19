@@ -1,6 +1,7 @@
 from config.importer import *
 from helper.config_help import *
 from helper.nmf_help import *
+from helper.error_help import *
 
 
 
@@ -62,8 +63,8 @@ class emgNMF:
                                     alpha_W=0.001
 
         Returns:
-        - W: Basis matrix (synergies).
-        - H: Coefficient matrix (activation).
+        - U: Basis matrix (synergies).
+        - S_m: Coefficient matrix (activation).
         """
         print("\nApplying Sparse NMF...")
         U, S_m  = apply_nmf(emg_data=self.emg_data, n_components=self.max_synergies, init=self.s_init, max_iter=self.max_iter,
@@ -79,8 +80,8 @@ class emgNMF:
         Perform classic NMF on the input data.
         
         Returns:
-        - W: Basis matrix (synergies).
-        - H: Coefficient matrix (activation).
+        - U: Basis matrix (synergies).
+        - S_m: Coefficient matrix (activation).
         """
         print("\nApplying Classical NMF...")
         U, S_m = apply_nmf(self.emg_data, self.max_synergies, init=self.init, max_iter=self.max_iter,
@@ -157,3 +158,4 @@ class emgNMF:
         print(f"Best l1_ratio: {l1}")
         
         return optimal_synergies, alpha, l1, cv_results, sparsity_results
+    

@@ -18,9 +18,9 @@ extractor = emgPCA(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
 optimal_synergies = 3
 
 
-S_m, U = extractor.pca()
+S_m, U, mean = extractor.PCA()
 
-reconstructed = extractor.reconstruct_data(U, S_m, optimal_synergies)
+reconstructed = extractor.PCA_reconstruction(U, S_m, mean, optimal_synergies)
 
 plot_all_results(pinch_ulnar_power_000, reconstructed, U, S_m, optimal_synergies)
 

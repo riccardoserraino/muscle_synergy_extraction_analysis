@@ -25,7 +25,7 @@ class emgPCA:
         self.svd_solver='full'
     
 
-    def pca(self):
+    def PCA(self):
         """
         Perform PCA on the input data.
         
@@ -35,26 +35,38 @@ class emgPCA:
         - explained_variance: Variance explained by each component
         """
         print("\nApplying PCA...")
-        S_m, U = apply_pca(
+        S_m, U, mean = apply_pca(
             emg_data=self.emg_data,
             n_components=self.max_components,
             svd_solver=self.svd_solver,
             random_state=self.random_state
         )
         print("\n\n")
-        return S_m, U
+        return S_m, U, mean
     
 
 
-    def reconstruct_data(self, U, S_m, n_components):
+    def PCA_reconstruction(self, U, S_m, mean, n_components):
         """
         Reconstruct data using selected number of components.
         
         Returns:
         - reconstructed: Reconstructed data matrix
         """
+
         print("\nReconstructing data...")
         print("\n\n")
 
-        return pca_reconstruction(U, S_m, n_components)
+        # Select the first n_components
+        U_rec = U[:, :n_components]
+        S_m_rec = S_m[:n_components, :]
+        
+        # Reconstruct the data
+        reconstructed = np.dot(U_rec, S_m_rec) + mean
+        
+        """original_mean = np.mean(self.emg_data)
+        reconstructed_mean = np.mean(reconstructed)
+        print(f"Mean difference: {original_mean - reconstructed_mean}")"""
+
+        return reconstructed
     

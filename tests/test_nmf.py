@@ -11,7 +11,7 @@ loader = emgDataLoader(config_dir)
 pinch_ulnar_power_dict = loader.combined_poses_dict()
 pinch_ulnar_power_000, ts_000 = loader.combined_dataset_3('0', '0', '0')
 
-extractor = emgNMF(pinch_ulnar_power_000, emg_data_dict=pinch_ulnar_power_dict)
+extractor = emgNMF(pinch_ulnar_power_000, pinch_ulnar_power_dict)
 
 # Evaluate Synergy number and Sparsity
 # optimal_synergies, optimal_alpha, optimal_l1, cv_results, sparsity_results = extractor.synergy_sparsity_extractor()

@@ -17,6 +17,10 @@ single_pose:
     "1": "rep1_power.bag"
     "2": "rep2_power.bag"
 
+pinch_x3: ["pinch", "pinch", "pinch"]
+ulnar_x3: ["ulnar", "ulnar", "ulnar"]
+power_x3: ["power", "power", "power"]
+pinch_ulnar_power_x3: ["pinch", "pinch", "pinch", "ulnar", "ulnar", "ulnar", "power", "power", "power"]
 
 pinch_ulnar_power: ["pinch", "ulnar", "power"]
 combination_2: ["pinch", "ulnar", "power", "pinch"]

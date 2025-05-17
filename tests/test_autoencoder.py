@@ -4,7 +4,7 @@ from helper.visualization_help import *
 from analyser.autoencoder import *
 
 # Initialization for yaml file directory
-config_dir = "C:/Users/ricca/Desktop/int_unibo/muscle_synergy_analysis/config/config.yaml"
+config_dir = "C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/config/config.yaml"
 
 # Load emg data for all gestures combined
 pinch_ulnar_power_000, ts_000 = emgDataLoader(config_dir).combined_dataset(reps='000', combination_name='pinch_ulnar_power')

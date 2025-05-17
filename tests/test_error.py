@@ -8,7 +8,7 @@ from analyser.dataload import *
 from helper.visualization_help import *
 
 # Initialization for yaml file directory
-config_dir = "C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/config/config.yaml"
+config_dir = "config/config.yaml"
 
 loader = emgDataLoader(config_dir)
 

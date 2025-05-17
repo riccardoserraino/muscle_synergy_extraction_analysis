@@ -1,6 +1,6 @@
 # Datapath configuration
 
-base_data_dir: "C:/Users/ricca/Desktop/int_unibo/all_scripts/muscle_synergy_analysis/datasets/"
+base_data_dir: "datasets/"
 
 
 single_pose:
